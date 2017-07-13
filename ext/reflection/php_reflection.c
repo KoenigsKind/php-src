@@ -380,6 +380,9 @@ static void _class_string(smart_str *str, zend_class_entry *ce, zval *obj, char 
 
 		ZEND_HASH_FOREACH_STR_KEY_PTR(&ce->constants_table, key, c) {
 			_class_const_string(str, ZSTR_VAL(key), c, ZSTR_VAL(sub_indent));
+			if (UNEXPECTED(EG(exception))) {
+				return;
+			}
 		} ZEND_HASH_FOREACH_END();
 	}
 	smart_str_append_printf(str, "%s  }\n", indent);
@@ -637,7 +640,10 @@ static void _parameter_string(smart_str *str, zend_function *fptr, struct _zend_
 
 			smart_str_appends(str, " = ");
 			ZVAL_DUP(&zv, RT_CONSTANT(&fptr->op_array, precv->op2));
-			zval_update_constant_ex(&zv, fptr->common.scope);
+			if (UNEXPECTED(zval_update_constant_ex(&zv, fptr->common.scope) == FAILURE)) {
+				zval_ptr_dtor(&zv);
+				return;
+			}
 			if (Z_TYPE(zv) == IS_TRUE) {
 				smart_str_appends(str, "true");
 			} else if (Z_TYPE(zv) == IS_FALSE) {
@@ -3460,13 +3466,15 @@ ZEND_METHOD(reflection_method, getModifiers)
 {
 	reflection_object *intern;
 	zend_function *mptr;
+	uint32_t keep_flags = ZEND_ACC_PPP_MASK | ZEND_ACC_IMPLICIT_PUBLIC
+		| ZEND_ACC_STATIC | ZEND_ACC_ABSTRACT | ZEND_ACC_FINAL;
 
 	if (zend_parse_parameters_none() == FAILURE) {
 		return;
 	}
 	GET_REFLECTION_OBJECT_PTR(mptr);
 
-	RETURN_LONG(mptr->common.fn_flags);
+	RETURN_LONG((mptr->common.fn_flags & keep_flags));
 }
 /* }}} */
 
@@ -4663,13 +4671,15 @@ ZEND_METHOD(reflection_class, getModifiers)
 {
 	reflection_object *intern;
 	zend_class_entry *ce;
+	uint32_t keep_flags = ZEND_ACC_FINAL
+		| ZEND_ACC_EXPLICIT_ABSTRACT_CLASS | ZEND_ACC_IMPLICIT_ABSTRACT_CLASS;
 
 	if (zend_parse_parameters_none() == FAILURE) {
 		return;
 	}
 	GET_REFLECTION_OBJECT_PTR(ce);
 
-	RETURN_LONG(ce->ce_flags & ~(ZEND_ACC_CONSTANTS_UPDATED|ZEND_ACC_USE_GUARDS|ZEND_ACC_INHERITED));
+	RETURN_LONG((ce->ce_flags & keep_flags));
 }
 /* }}} */
 
@@ -5451,13 +5461,14 @@ ZEND_METHOD(reflection_property, getModifiers)
 {
 	reflection_object *intern;
 	property_reference *ref;
+	uint32_t keep_flags = ZEND_ACC_PPP_MASK | ZEND_ACC_IMPLICIT_PUBLIC | ZEND_ACC_STATIC;
 
 	if (zend_parse_parameters_none() == FAILURE) {
 		return;
 	}
 	GET_REFLECTION_OBJECT_PTR(ref);
 
-	RETURN_LONG(ref->prop.flags);
+	RETURN_LONG((ref->prop.flags & keep_flags));
 }
 /* }}} */
 

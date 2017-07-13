@@ -39,6 +39,8 @@ PHP 7.2 UPGRADE NOTES
     of a notice. They will generate an Error in a future version of PHP.
     (https://wiki.php.net/rfc/deprecate-bareword-strings)
   . Minimum supported Windows versions are Windows 7/Server 2008 R2.
+  . Initial trait property value compatibility check will no longer perform
+    any casts. (Bug #74269)
 
 - BCMath:
   . The bcmod() function no longer truncates fractional numbers to integers. As
@@ -53,11 +55,6 @@ PHP 7.2 UPGRADE NOTES
   . The json_decode() option JSON_OBJECT_AS_ARRAY is used if the second
     parameter (assoc) is null. Previously JSON_OBJECT_AS_ARRAY was always
     ignored.
-
-- PCRE:
-  . preg_match() and other PCRE functions now distinguish between unmatched
-    subpatterns and empty matches by reporting NULL and "" (empty string),
-    respectively. Formerly, either was reported as empty string.
 
 - Session:
   . Removed register_globals related code and "!" can be used as $_SESSION key name.
@@ -99,9 +96,17 @@ PHP 7.2 UPGRADE NOTES
     inherited method. This complies with contravariance of method argument types
     under the Liskov Substitution Principle.
     (https://wiki.php.net/rfc/parameter-no-type-variance)
+  . It is now allowed to override an abstract method with another abstract
+    method in a child class.
+    (https://wiki.php.net/rfc/allow-abstract-function-override)
+  . A trailing comma in group use statements is now allowed.
+    (https://wiki.php.net/rfc/list-syntax-trailing-commas)
 
 - PCRE:
   . Added `J` modifier for setting PCRE_DUPNAMES.
+  . Added `PREG_UNMATCHED_AS_NULL` flag to allow distinguish between unmatched
+    subpatterns and empty matches by reporting NULL and "" (empty string),
+    respectively.
 
 - Standard:
   . Simplified password hashing API updated to support Argon2i hashes when PHP is compiled with libargon2
@@ -183,6 +188,7 @@ See also: https://wiki.php.net/rfc/deprecations_php_7_2
   . count() now raises a warning when an invalid parameter is passed.
     Only arrays and objects implementing the Countable interface should be passed.
   . pack() and unpack() now support float and double in both little and big endian.
+  . number_format() ensures zero values never contain a negative sign.
 
 - XML:
   . utf8_encode() and utf8_decode() have been moved to the Standard extension
@@ -230,7 +236,8 @@ See also: https://wiki.php.net/rfc/deprecations_php_7_2
 
 - EXIF:
    . Added extended exif tag support for the following formats: 
-     Samsung, DJI, Panasonic, Sony, Pentax, Minolta & Sigma/Foveon.
+     Samsung, DJI, Panasonic, Sony, Pentax, Minolta, Sigma/Foveon, 
+	 AGFA, Kyocera, Ricoh & Epson.
 
 - GD:
   . Removed --enable-gd-native-ttf configuration option which was unused as
@@ -268,6 +275,9 @@ See also: https://wiki.php.net/rfc/deprecations_php_7_2
 - GD:
   . IMG_EFFECT_MULTIPLY
   . IMG_BMP
+
+- PCRE
+  . PREG_UNMATCHED_AS_NULL
 
 - Standard:
   . PASSWORD_ARGON2_DEFAULT_MEMORY_COST

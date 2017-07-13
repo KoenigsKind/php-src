@@ -97,11 +97,11 @@ and build three tarballs (gz, bz2 and xz).
 and output verification information to be included in announcement email
 
 14. Copy those tarballs (scp, rsync) to downloads.php.net, in your homedir there should be a
-directory "downloads/". Copy them into there, so that the system can generate
-MD5 sums. If you do not have this directory, talk to Derick or Dan.
+directory "public_html/". Copy them into there, so that the system can generate
+MD5 sums. If you do not have this directory, create it.
 
-15. Now the RC can be found on http://downloads.php.net/yourname,
-f.e. http://downloads.php.net/derick/
+15. Now the RC can be found on http://downloads.php.net/~yourname,
+f.e. http://downloads.php.net/~derick/
 
 16. Once the release has been tagged, contact the PHP Windows development team
 (internals-win@lists.php.net) so that Windows binaries can be created. Once
@@ -315,3 +315,22 @@ the news entry.
 Please make sure that the mail to php-announce@ is its own completely separate email.
 This is to make sure that replies to the announcement on php-general@ or internals@
 will not accidentally hit the php-announce@ mailinglist.
+
+New Release Manager Checklist
+-----------------------------
+
+1. Email systems@ to get setup for access to downloads.php.net
+
+2. Create a GPG key for your @php.net address and publish it by editing `include/gpg-keys.inc`
+   in the `web-php` repository, adding the output of `gpg --fingerprint "$USER@php.net"`. Let
+   one or more of the previous RMs sign your key.
+
+3. Request karma to eding main/php_version.h. Possibly karma for other restricted parts of 
+   php-src might come in question.
+
+4. Request karma for web/qa.git and web/php.git for publishing release announcements.
+
+5. Request moderation access to announce@php.net and primary-qa-tester@lists.php.net lists, to
+   be able to moderate your release announcements. All the announcements should be sent from
+   the @php.net alias.
+

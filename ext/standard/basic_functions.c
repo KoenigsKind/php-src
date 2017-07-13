@@ -736,6 +736,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_ini_get_all, 0, 0, 0)
 	ZEND_ARG_INFO(0, extension)
+	ZEND_ARG_INFO(0, details)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_ini_set, 0)
@@ -5319,7 +5320,7 @@ PHP_FUNCTION(highlight_string)
 PHP_FUNCTION(ini_get)
 {
 	char *varname, *str;
-	size_t varname_len;
+	size_t varname_len, len;
 
 	ZEND_PARSE_PARAMETERS_START(1, 1)
 		Z_PARAM_STRING(varname, varname_len)
@@ -5331,7 +5332,13 @@ PHP_FUNCTION(ini_get)
 		RETURN_FALSE;
 	}
 
-	RETURN_STRING(str);
+	len = strlen(str);
+	if (len == 0) {
+		RETURN_EMPTY_STRING();
+	} else if (len == 1) {
+		RETURN_INTERNED_STR(ZSTR_CHAR((zend_uchar)str[0]));
+	}
+	RETURN_STRINGL(str, len);
 }
 /* }}} */
 
@@ -5442,7 +5449,15 @@ PHP_FUNCTION(ini_set)
 
 	/* copy to return here, because alter might free it! */
 	if (old_value) {
-		RETVAL_STRING(old_value);
+		size_t len = strlen(old_value);
+
+		if (len == 0) {
+			RETVAL_EMPTY_STRING();
+		} else if (len == 1) {
+			RETVAL_INTERNED_STR(ZSTR_CHAR((zend_uchar)old_value[0]));
+		} else {
+			RETVAL_STRINGL(old_value, len);
+		}
 	} else {
 		RETVAL_FALSE;
 	}
