@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2017 The PHP Group                                |
+   | Copyright (c) 1997-2018 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -18,8 +18,6 @@
    | PHP 4.0 patches by Thies C. Arntzen <thies@thieso.net>               |
    +----------------------------------------------------------------------+
 */
-
-/* $Id$ */
 
 #include "php.h"
 #include "php_math.h"
@@ -929,9 +927,10 @@ PHPAPI zend_string * _php_math_longtobase(zval *arg, int base)
 	*ptr = '\0';
 
 	do {
+		ZEND_ASSERT(ptr > buf);
 		*--ptr = digits[value % base];
 		value /= base;
-	} while (ptr > buf && value);
+	} while (value);
 
 	return zend_string_init(ptr, end - ptr, 0);
 }
@@ -1193,7 +1192,7 @@ PHPAPI zend_string *_php_math_number_format_ex(double d, int dec, char *dec_poin
 	 * we requested due to internal buffer limitations */
 	if (dec) {
 		size_t declen = (dp ? s - dp : 0);
-		size_t topad = dec > declen ? dec - declen : 0;
+		size_t topad = (size_t)dec > declen ? dec - declen : 0;
 
 		/* pad with '0's */
 		while (topad--) {
@@ -1231,7 +1230,7 @@ PHPAPI zend_string *_php_math_number_format_ex(double d, int dec, char *dec_poin
 	}
 
 	ZSTR_LEN(res) = reslen;
-	zend_string_release(tmpbuf);
+	zend_string_release_ex(tmpbuf, 0);
 	return res;
 }
 

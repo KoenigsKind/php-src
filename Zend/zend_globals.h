@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | Zend Engine                                                          |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1998-2017 Zend Technologies Ltd. (http://www.zend.com) |
+   | Copyright (c) 1998-2018 Zend Technologies Ltd. (http://www.zend.com) |
    +----------------------------------------------------------------------+
    | This source file is subject to version 2.00 of the Zend license,     |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -16,8 +16,6 @@
    |          Zeev Suraski <zeev@zend.com>                                |
    +----------------------------------------------------------------------+
 */
-
-/* $Id$ */
 
 #ifndef ZEND_GLOBALS_H
 #define ZEND_GLOBALS_H
@@ -155,6 +153,7 @@ struct _zend_executor_globals {
 	zval          *vm_stack_top;
 	zval          *vm_stack_end;
 	zend_vm_stack  vm_stack;
+	size_t         vm_stack_page_size;
 
 	struct _zend_execute_data *current_execute_data;
 	zend_class_entry *fake_scope; /* used to avoid checks accessing properties */
@@ -162,6 +161,10 @@ struct _zend_executor_globals {
 	zend_long precision;
 
 	int ticks_count;
+
+	uint32_t persistent_constants_count;
+	uint32_t persistent_functions_count;
+	uint32_t persistent_classes_count;
 
 	HashTable *in_autoload;
 	zend_function *autoload_func;
@@ -272,6 +275,9 @@ struct _zend_php_scanner_globals {
 	int yy_state;
 	zend_stack state_stack;
 	zend_ptr_stack heredoc_label_stack;
+	zend_bool heredoc_scan_ahead;
+	int heredoc_indentation;
+	zend_bool heredoc_indentation_uses_spaces;
 
 	/* original (unfiltered) script */
 	unsigned char *script_org;

@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2017 The PHP Group                                |
+   | Copyright (c) 1997-2018 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -15,8 +15,6 @@
    | Author: Michele Locati <mlocati@gmail.com>                           |
    +----------------------------------------------------------------------+
  */
-
-/* $Id$ */
 
 #include "win32/console.h"
 
@@ -94,10 +92,18 @@ PHP_WINUTIL_API BOOL php_win32_console_fileno_set_vt100(zend_long fileno, BOOL e
 
 PHP_WINUTIL_API BOOL php_win32_console_is_own(void)
 {/*{{{*/
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (!IsDebuggerPresent()) {
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		DWORD pl[1];
+		BOOL ret0 = FALSE, ret1 = FALSE;
 
-	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) && !IsDebuggerPresent()) {
-		return !csbi.dwCursorPosition.X && !csbi.dwCursorPosition.Y;
+		if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+			ret0 = !csbi.dwCursorPosition.X && !csbi.dwCursorPosition.Y;
+		}
+
+		ret1 = GetConsoleProcessList(pl, 1) == 1;
+
+		return ret0 && ret1;
 	}
 
 	return FALSE;

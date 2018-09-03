@@ -2,7 +2,7 @@
    +----------------------------------------------------------------------+
    | PHP Version 7                                                        |
    +----------------------------------------------------------------------+
-   | Copyright (c) 1997-2017 The PHP Group                                |
+   | Copyright (c) 1997-2018 The PHP Group                                |
    +----------------------------------------------------------------------+
    | This source file is subject to version 3.01 of the PHP license,      |
    | that is bundled with this package in the file LICENSE, and is        |
@@ -15,8 +15,6 @@
    | Author: Zeev Suraski <zeev@zend.com>                                 |
    +----------------------------------------------------------------------+
  */
-
-/* $Id$ */
 
 #include "php.h"
 #include "ext/standard/info.h"
@@ -196,7 +194,7 @@ PHPAPI void config_zval_dtor(zval *zvalue)
 		zend_hash_destroy(Z_ARRVAL_P(zvalue));
 		free(Z_ARR_P(zvalue));
 	} else if (Z_TYPE_P(zvalue) == IS_STRING) {
-		zend_string_release(Z_STR_P(zvalue));
+		zend_string_release_ex(Z_STR_P(zvalue), 1);
 	}
 }
 /* Reset / free active_ini_sectin global */
@@ -350,10 +348,11 @@ static void php_load_php_extension_cb(void *arg)
 
 /* {{{ php_load_zend_extension_cb
  */
+#ifdef HAVE_LIBDL
 static void php_load_zend_extension_cb(void *arg)
 {
 	char *filename = *((char **) arg);
-	const int length = (int)strlen(filename);
+	const size_t length = strlen(filename);
 
 #ifndef PHP_WIN32
 	(void) length;
@@ -365,9 +364,13 @@ static void php_load_zend_extension_cb(void *arg)
 		DL_HANDLE handle;
 		char *libpath;
 		char *extension_dir = INI_STR("extension_dir");
-		int extension_dir_len = (int)strlen(extension_dir);
-		int slash_suffix = IS_SLASH(extension_dir[extension_dir_len-1]);
+		int slash_suffix = 0;
 		char *err1, *err2;
+
+		if (extension_dir && extension_dir[0]) {
+			slash_suffix = IS_SLASH(extension_dir[strlen(extension_dir)-1]);
+		}
+
 		/* Try as filename first */
 		if (slash_suffix) {
 			spprintf(&libpath, 0, "%s%s", extension_dir, filename); /* SAFE */
@@ -405,6 +408,9 @@ static void php_load_zend_extension_cb(void *arg)
 		efree(libpath);
 	}
 }
+#else
+static void php_load_zend_extension_cb(void *arg) { }
+#endif
 /* }}} */
 
 /* {{{ php_init_config
@@ -629,7 +635,7 @@ int php_init_config(void)
 			ZVAL_NEW_STR(&tmp, zend_string_init(fh.filename, strlen(fh.filename), 1));
 			zend_hash_str_update(&configuration_hash, "cfg_file_path", sizeof("cfg_file_path")-1, &tmp);
 			if (opened_path) {
-				zend_string_release(opened_path);
+				zend_string_release_ex(opened_path, 0);
 			} else {
 				efree((char *)fh.filename);
 			}
